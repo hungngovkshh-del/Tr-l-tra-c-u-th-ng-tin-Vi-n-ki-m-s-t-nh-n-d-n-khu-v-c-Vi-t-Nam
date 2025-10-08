@@ -41,12 +41,32 @@ const App: React.FC = () => {
       const normalizedQuery = normalizeText(trimmedQuery);
       const queryTokens = normalizedQuery.split(' ').filter(token => token.length > 0);
 
-      results = results.filter(vks => {
+      const filtered = results.filter(vks => {
         const searchableText = normalizeText(
-          `${vks.ten} ${vks.phamViThamQuyen} ${vks.diaDiem} ${vks.donViKeThua} ${vks.tinh}`
+          `${vks.ten} ${vks.diaDiem} ${vks.donViKeThua} ${vks.tinh}`
         );
-        return queryTokens.every(token => searchableText.includes(token));
+        return queryTokens.every(token => {
+          const escapedToken = token.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          // Use regex with a word boundary (\b). This ensures that we match whole words,
+          // preventing "4" from matching "14", which was the source of the issue.
+          // This makes the search more precise for queries containing numbers.
+          const regex = new RegExp(`\\b${escapedToken}`);
+          return regex.test(searchableText);
+        });
       });
+      
+      const getScore = (vks: VKSND) => {
+        const normalizedTen = normalizeText(vks.ten);
+        if (normalizedTen === normalizedQuery) return 3; // Highest priority for exact name match
+        if (normalizedTen.startsWith(normalizedQuery)) return 2; // High priority for name starting with query
+        if (normalizedTen.includes(normalizedQuery)) return 1; // Medium priority for name containing query phrase
+        return 0;
+      };
+
+      // Sort the results for relevance based on the score.
+      // The sort method sorts elements of an array in place and returns the reference to the same array.
+      // A copy is made with .slice() to avoid mutating the original filtered array if it were used elsewhere.
+      return filtered.slice().sort((a, b) => getScore(b) - getScore(a));
     }
     
     return results;
@@ -79,7 +99,7 @@ const App: React.FC = () => {
 
   const InitialState: React.FC = () => (
     <div className="text-center py-16 px-6 bg-white rounded-lg border border-gray-200 shadow-sm">
-        <svg xmlns="http://www.w.org/2000/svg" className="mx-auto h-12 w-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.8 14.945l.128.128A2 2 0 009.354 16h5.292a2 2 0 001.414-.586l.128-.128" />
         </svg>
