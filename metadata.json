@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Trợ lý Tra cứu VKSND",
+  "description": "Một ứng dụng web để tra cứu thông tin về các Viện kiểm sát nhân dân (VKSND) khu vực tại Việt Nam, bao gồm tên, thẩm quyền lãnh thổ, địa điểm trụ sở và đơn vị kế thừa.",
+  "requestFramePermissions": []
+}
